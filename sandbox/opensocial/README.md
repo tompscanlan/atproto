@@ -47,6 +47,10 @@ GROUP_HANDLE=sandbox-group.devnet.test INVITE_CODE=<from devnet data/accounts.en
   node sandbox/opensocial/probe-typed-scope.mjs
 ```
 
+`probe-cross-pds.mjs` needs devnet's `docker-compose.multi-pds.yml` as well. It asks whether members
+on a regular release (:3020) and on a production build (:3030) can join a group hosted on the alpha
+(:3010), the way atmo joins them. Pass `INVITE_CODE` (the alpha requires one).
+
 `PROPOSAL_LEXICONS` points the seed at a checkout of the proposal's `lexicons/` directory. The default
 is `/workspaces/scratch/opensocial-proposal/lexicons`. The probe imports `@atcute` from the atmo
 checkout and Playwright from mise, so it runs in the scratch pod as written.
