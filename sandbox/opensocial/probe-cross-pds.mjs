@@ -17,8 +17,12 @@ import path from 'node:path'
 const require = createRequire(import.meta.url)
 const {
   chromium,
-} = require('/home/node/.local/share/mise/installs/npm-playwright/1.63.0/node_modules/playwright')
+} = require(
+  process.env.PLAYWRIGHT_MODULE ??
+    '/home/node/.local/share/mise/installs/npm-playwright/1.63.0/node_modules/playwright',
+)
 const ATCUTE =
+  process.env.ATCUTE_DIR ??
   '/workspaces/scratch/wt-atmo-events-opensocial/apps/web/node_modules/@atcute'
 const { OAuthClient, MemoryStore } = await import(
   `${ATCUTE}/oauth-node-client/dist/index.js`
@@ -31,7 +35,7 @@ const {
 } = await import(`${ATCUTE}/identity-resolver/dist/index.js`)
 
 const ALPHA = process.env.ALPHA_PDS_URL ?? 'http://localhost:3010'
-const PLC = process.env.PLC_URL ?? 'http://localhost:2592'
+const PLC = process.env.PLC_URL ?? 'http://localhost:2582'
 const INVITE_CODE = process.env.INVITE_CODE
 const OUT =
   process.env.PROBE_OUT ?? path.dirname(new URL(import.meta.url).pathname)
