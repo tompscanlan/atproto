@@ -58,6 +58,11 @@ collection. It waits out the PDS's 5-minute lexicon refresh, so a run takes abou
 the same account variables as the typed-scope probe plus `BOB_HANDLE`, `BOB_PASSWORD` and
 `LEX_AUTHORITY_DID`.
 
+`probe-linked-session.mjs` repeats the events-space writes through an OAuth session that holds exactly
+the scopes atmo's group session asks for (`space:*?authority=self…`), under a type with no published
+declaration (`EVENTS_TYPE`, default `net.openmeet.space.events`). It needs `LEX_AUTHORITY_DID` and
+`INVITE_CODE`.
+
 `PROPOSAL_LEXICONS` points the seed at a checkout of the proposal's `lexicons/` directory. The default
 is `/workspaces/scratch/opensocial-proposal/lexicons`. The probe imports `@atcute` from the atmo
 checkout and Playwright from mise, so it runs in the scratch pod as written.
