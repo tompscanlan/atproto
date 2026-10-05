@@ -32,6 +32,21 @@ node sandbox/opensocial/seed-lexicons.mjs
 node sandbox/opensocial/probe-typed-scope.mjs
 ```
 
+Against [atproto-devnet](https://github.com/OpenMeet-Team/atproto-devnet)'s spaces overlay (the
+same alpha PDS in Docker, plus PLC, Jetstream and TAP) instead of dev-env, name the endpoints and
+accounts in the environment:
+
+```sh
+LEX_AUTHORITY_HANDLE=lex-authority.devnet.test LEX_AUTHORITY_PASSWORD=lex-authority-devnet-pass \
+LEX_AUTHORITY_DID=did:plc:... LEX_AUTHORITY_PDS=http://localhost:3010 \
+  node sandbox/opensocial/seed-lexicons.mjs
+
+PDS_URL=http://localhost:3010 PLC_URL=http://localhost:2582 \
+ALICE_HANDLE=alice.devnet.test ALICE_PASSWORD=alice-devnet-pass \
+GROUP_HANDLE=sandbox-group.devnet.test INVITE_CODE=<from devnet data/accounts.env> \
+  node sandbox/opensocial/probe-typed-scope.mjs
+```
+
 `PROPOSAL_LEXICONS` points the seed at a checkout of the proposal's `lexicons/` directory. The default
 is `/workspaces/scratch/opensocial-proposal/lexicons`. The probe imports `@atcute` from the atmo
 checkout and Playwright from mise, so it runs in the scratch pod as written.

@@ -63,9 +63,17 @@ const verdict = (id, question, answer) => {
   log(`\n### ${id} -> ${answer}\n`)
 }
 
-const intro = await (await fetch(INTROSPECT)).json()
-const HOST = intro.pds.url
-const PLC = intro.plc.url
+// dev-env publishes its URLs on the introspection server; on atproto-devnet, set
+// PDS_URL, PLC_URL, ALICE_HANDLE, ALICE_PASSWORD, GROUP_HANDLE and INVITE_CODE.
+const intro = process.env.PDS_URL
+  ? null
+  : await (await fetch(INTROSPECT)).json()
+const HOST = process.env.PDS_URL ?? intro.pds.url
+const PLC = process.env.PLC_URL ?? intro.plc.url
+const ALICE_HANDLE = process.env.ALICE_HANDLE ?? 'alice.test'
+const ALICE_PASSWORD = process.env.ALICE_PASSWORD ?? 'alice-pass'
+const GROUP_HANDLE = process.env.GROUP_HANDLE ?? 'sandbox-group.test'
+const INVITE_CODE = process.env.INVITE_CODE
 log(`pds1 ${HOST}, plc ${PLC}`)
 
 async function req(label, doFetch, method, nsid, { params, body } = {}) {
@@ -95,7 +103,12 @@ async function passwordSession(handle, password, { create } = {}) {
     const made = await fetch(`${HOST}/xrpc/com.atproto.server.createAccount`, {
       method: 'POST',
       headers: { 'content-type': 'application/json' },
-      body: JSON.stringify({ handle, password, email: `${handle}@test.com` }),
+      body: JSON.stringify({
+        handle,
+        password,
+        email: `${handle}@test.com`,
+        ...(INVITE_CODE ? { inviteCode: INVITE_CODE } : {}),
+      }),
     })
     log(`- createAccount ${handle}: HTTP ${made.status}`)
   }
@@ -122,12 +135,10 @@ const asPw = (s, method, nsid, opts) =>
     opts,
   )
 
-const group = await passwordSession(
-  'sandbox-group.test',
-  'sandbox-group-pass',
-  { create: true },
-)
-const alice = await passwordSession('alice.test', 'alice-pass')
+const group = await passwordSession(GROUP_HANDLE, 'sandbox-group-pass', {
+  create: true,
+})
+const alice = await passwordSession(ALICE_HANDLE, ALICE_PASSWORD)
 const GROUP = group.did
 const ALICE = alice.did
 const MEMBERS = `at://${GROUP}/space/${MEMBERS_TYPE}/self`
@@ -222,9 +233,9 @@ async function oauthFlow(id, scopes, { shotConsent } = {}) {
         (await user.isEditable()) &&
         !(await user.inputValue())
       ) {
-        await user.fill('alice.test')
+        await user.fill(ALICE_HANDLE)
       }
-      await pwField.fill('alice-pass')
+      await pwField.fill(ALICE_PASSWORD)
       await p.getByRole('button', { name: 'Sign in' }).click()
       const consentBtn = p
         .getByRole('button', { name: /accept|authorize|allow/i })

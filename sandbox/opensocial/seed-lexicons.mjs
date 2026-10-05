@@ -39,13 +39,31 @@ try {
     .trim()
 } catch {}
 
-const intro = await (await fetch(INTROSPECT)).json()
-const auth = intro.lexiconAuthority
-if (!auth) {
-  console.log(`no lexiconAuthority at ${INTROSPECT}; is bin-multi-pds running?`)
-  process.exit(2)
+// On a network without dev-env's introspection server (atproto-devnet), name the
+// authority account in the environment instead.
+let auth
+if (process.env.LEX_AUTHORITY_HANDLE) {
+  const env = (k) => {
+    if (!process.env[k])
+      throw new Error(`${k} is required with LEX_AUTHORITY_HANDLE`)
+    return process.env[k]
+  }
+  auth = {
+    handle: env('LEX_AUTHORITY_HANDLE'),
+    password: env('LEX_AUTHORITY_PASSWORD'),
+    did: env('LEX_AUTHORITY_DID'),
+    pds: env('LEX_AUTHORITY_PDS'),
+  }
+} else {
+  const intro = await (await fetch(INTROSPECT)).json()
+  auth = intro.lexiconAuthority
+  if (!auth) {
+    console.log(
+      `no lexiconAuthority at ${INTROSPECT}; is bin-multi-pds running?`,
+    )
+    process.exit(2)
+  }
 }
-const pds = intro.pds.url
 console.log(`proposal ${DIR} @ ${rev}`)
 console.log(`authority ${auth.handle} (${auth.did}) on ${auth.pds}`)
 
