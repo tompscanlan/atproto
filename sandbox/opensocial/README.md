@@ -51,6 +51,13 @@ GROUP_HANDLE=sandbox-group.devnet.test INVITE_CODE=<from devnet data/accounts.en
 on a regular release (:3020) and on a production build (:3030) can join a group hosted on the alpha
 (:3010), the way atmo joins them. Pass `INVITE_CODE` (the alpha requires one).
 
+`probe-events-space.mjs` runs against devnet's spaces overlay. It builds a group's members-only
+events space under the proposal's example type `group.lexicon.calendar.events`, publishing that
+type's declaration itself, then asks whether a bare typed scope widens when the declaration gains a
+collection. It waits out the PDS's 5-minute lexicon refresh, so a run takes about 7 minutes. It takes
+the same account variables as the typed-scope probe plus `BOB_HANDLE`, `BOB_PASSWORD` and
+`LEX_AUTHORITY_DID`.
+
 `PROPOSAL_LEXICONS` points the seed at a checkout of the proposal's `lexicons/` directory. The default
 is `/workspaces/scratch/opensocial-proposal/lexicons`. The probe imports `@atcute` from the atmo
 checkout and Playwright from mise, so it runs in the scratch pod as written.
