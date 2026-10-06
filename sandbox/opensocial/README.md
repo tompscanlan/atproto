@@ -120,6 +120,7 @@ node sandbox/opensocial/probe-private-rsvp.mjs > private-rsvp.log 2>&1
 | `probe-events-space.mjs` | Can a group keep members-only events in a space? Does a bare typed scope widen when its declaration changes? | no |
 | `probe-linked-session.mjs` | Can a group's OAuth session with `space:*` scopes build that events space, under a type nobody published? | no |
 | `probe-private-rsvp.mjs` | Can a member's RSVP to a members-only event stay private, and who can read it? | no |
+| `probe-space-blob.mjs` | Can a members-only event carry an image that only the group can read back? | no |
 
 The results below were seen on the spaces image at revision `79d6307e`. A different image may
 differ, and that is worth knowing.
@@ -201,6 +202,27 @@ and writes a standard RSVP into the space from their own repo.
   lands on their PDS, and a reader who asks for it by DID can read it. So a reader should only ask
   about DIDs it knows are members.
 - A grant without `action=read_self` cannot read the member's own RSVP back.
+
+### An image on a members-only event
+
+```sh
+set -a; . data/accounts.env; set +a      # E2E_GROUP_PASSWORD, ALICE_*
+node sandbox/opensocial/probe-space-blob.mjs
+```
+
+This one runs as atmo's groups e2e fixture group (`GROUP_HANDLE`, `groups-e2e.devnet.test` by
+default). Run the e2e once first so the group's calendar space exists. The group signs in with
+atmo's linked-session scopes. It uploads an image the usual way, cites it only from an event in the
+calendar space, and deletes that event at the end. The probe reads the group's actor store through
+`docker exec` (`PDS_CONTAINER`, `devnet-spaces-pds-1` by default).
+
+- `com.atproto.space.getBlob` returns the image to the group's OAuth session, to its password
+  session, and to its space credential sent as `Atproto-Space`.
+- Anonymous `sync.getBlob` and `sync.listBlobs` serve and list an image that a public record cites
+  (the control). They refuse and leave out the one that only the space cites. An anonymous
+  `space.getBlob` gets 401, and an account that is not listed is refused.
+- An upload that nothing cites stays in temp storage. Nothing serves it.
+- Deleting the event deletes its image at once.
 
 ## Rerunning and resetting
 
