@@ -15,6 +15,8 @@ import { createRequire } from 'node:module'
 import http from 'node:http'
 import path from 'node:path'
 
+import { launchBrowser } from './devnet-browser.mjs'
+
 const require = createRequire(import.meta.url)
 const {
   chromium,
@@ -154,8 +156,6 @@ async function oauthFlow(browser, id, who, scopes) {
       states: new MemoryStore({ ttl: 600_000 }),
     },
   })
-  client.resolver.protectedResourceResolver.allowHttp = true
-  client.resolver.authorizationServerResolver.allowHttp = true
   log(`- [${id}] requested scope: ${scopes.join(' ')}`)
   let auth
   try {
@@ -288,7 +288,7 @@ const acceptance = () => ({
   rkey: 'self',
   record: { $type: ACC, createdAt: new Date().toISOString() },
 })
-const browser = await chromium.launch()
+const browser = await launchBrowser(chromium)
 try {
   for (const m of members) {
     const tag = m.handle.split('.')[0]
