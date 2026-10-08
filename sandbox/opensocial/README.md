@@ -58,11 +58,10 @@ Every URL comes from the devnet's `data/devnet.env`. A probe that is missing one
 `<NAME> is required` before it calls anything.
 
 1. Bring the devnet up with its `scripts/https-up.sh`, naming a compose project in `DEVNET_PROJECT`.
-   The https devnet is on devnet's `https-devnet` branch until it merges; its README, section "The
-   https devnet", covers up, down and the tools below.
+   Its README, section "The https devnet", covers up, down and the tools below.
 
    ```sh
-   git clone -b https-devnet https://github.com/OpenMeet-Team/atproto-devnet
+   git clone https://github.com/OpenMeet-Team/atproto-devnet
    cd atproto-devnet
    DEVNET_PROJECT=devnet-mine ./scripts/https-up.sh
    ```
@@ -110,8 +109,7 @@ which is the devnet's `data/https/leaf.crt`.
 
 The answers are the ones the http devnet gave, listed under each scenario below. A member on the
 regular release or the production build still gets `502 UpstreamFailure` when writing into the
-group's space with a password session. `verify.sh` in this directory runs the three probes this
-way and compares their answers with the http ones.
+group's space with a password session.
 
 ## 1. Start devnet
 
@@ -120,11 +118,8 @@ Steps 1 to 4 run the http devnet. They are for the other three probes, `probe-ty
 written for the https devnet now. After the shared devnet is reset onto https, there is no http
 stack.
 
-The spaces, multi-PDS and relay overlays are on devnet's `spaces-lexicon-authority` branch until it
-merges.
-
 ```sh
-git clone -b spaces-lexicon-authority https://github.com/OpenMeet-Team/atproto-devnet
+git clone https://github.com/OpenMeet-Team/atproto-devnet
 cd atproto-devnet
 F="-f docker-compose.yml -f docker-compose.test.yml -f docker-compose.spaces.yml -f docker-compose.multi-pds.yml -f docker-compose.relay.yml"
 docker compose $F up -d --wait
