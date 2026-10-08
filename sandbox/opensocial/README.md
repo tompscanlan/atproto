@@ -49,7 +49,76 @@ the spaces PDS resolves every NSID from. No public relay knows about any of it.
   export PROPOSAL_LEXICONS=$PWD/proposal/lexicons
   ```
 
+## The https devnet: cross-PDS, linked session and private RSVPs
+
+`probe-cross-pds.mjs`, `probe-linked-session.mjs` and `probe-private-rsvp.mjs` run on
+atproto-devnet's https devnet. There every PDS, every handle and the PLC (as `plc.directory`) answer
+over TLS, from a local CA, the way the real network does, so the probes carry no devnet switch.
+Every URL comes from the devnet's `data/devnet.env`. A probe that is missing one stops with
+`<NAME> is required` before it calls anything.
+
+1. Bring the devnet up with its `scripts/https-up.sh`, naming a compose project in `DEVNET_PROJECT`.
+   The https devnet is on devnet's `https-devnet` branch until it merges; its README, section "The
+   https devnet", covers up, down and the tools below.
+
+   ```sh
+   git clone -b https-devnet https://github.com/OpenMeet-Team/atproto-devnet
+   cd atproto-devnet
+   DEVNET_PROJECT=devnet-mine ./scripts/https-up.sh
+   ```
+
+2. Set the environment, from the devnet checkout, in the shell you will run the probes from.
+   `devnet.env` holds the devnet's URLs (`ALPHA_PDS_URL`, `REGULAR_PDS_URL`, `PROD_PDS_URL`,
+   `PLC_URL`, `JETSTREAM_URL`), `LEX_AUTHORITY_DID` and `DEVNET_CA_FILE`. `accounts.env` holds the
+   logins, `ALICE_*`, `BOB_*` and `DEVNET_INVITE_CODE`.
+
+   ```sh
+   set -a; . data/devnet.env; . data/accounts.env; set +a
+   export INVITE_CODE=$DEVNET_INVITE_CODE
+   ```
+
+3. Publish the proposal's lexicons with the devnet's own tool. The cross-PDS probe needs them. A
+   rerun leaves a record alone when the authority already holds the same document.
+
+   ```sh
+   ./scripts/https-lexicons.sh "$PROPOSAL_LEXICONS"
+   ```
+
+4. Run each probe under the devnet's `scripts/https-run`. It maps the devnet's names to `127.0.0.1`
+   and has Node trust the devnet CA, for that command only. It maps only the handles it knows of,
+   so name the ones the probes make in `HTTPS_RUN_EXTRA_NAMES`. Put the screenshots somewhere other
+   than the script's directory with `PROBE_OUT`.
+
+   ```sh
+   export HTTPS_RUN_EXTRA_NAMES="probe-group.devnet.test carol.regular.devnet.test dave.prod.devnet.test linked-group.devnet.test rsvp-group.devnet.test erin.devnet.test frank.devnet.test"
+   export PROBE_OUT=$(mktemp -d)
+   S=<this checkout>/sandbox/opensocial
+   ./scripts/https-run node $S/probe-cross-pds.mjs > cross-pds.log 2>&1
+   ./scripts/https-run node $S/probe-linked-session.mjs > linked-session.log 2>&1
+   ./scripts/https-run node $S/probe-private-rsvp.mjs > private-rsvp.log 2>&1
+   ```
+
+   For a linked-session run as a new group, set `GROUP_HANDLE` and add the handle to
+   `HTTPS_RUN_EXTRA_NAMES`.
+
+The probes' browser comes from `devnet-browser.mjs`. Chromium does not read `NODE_EXTRA_CA_CERTS`,
+so the helper launches it with two flags: `--host-resolver-rules`, which maps the devnet's names
+to `127.0.0.1` (with wildcards for the handles), and `--ignore-certificate-errors-spki-list`, which
+trusts the key of the devnet's leaf certificate and no other certificate error. The leaf is
+`DEVNET_LEAF_FILE`. Without it, the helper takes `leaf.crt` from the directory of `DEVNET_CA_FILE`,
+which is the devnet's `data/https/leaf.crt`.
+
+The answers are the ones the http devnet gave, listed under each scenario below. A member on the
+regular release or the production build still gets `502 UpstreamFailure` when writing into the
+group's space with a password session. `verify.sh` in this directory runs the three probes this
+way and compares their answers with the http ones.
+
 ## 1. Start devnet
+
+Steps 1 to 4 run the http devnet. They are for the other three probes, `probe-typed-scope.mjs`,
+`probe-events-space.mjs` and `probe-space-blob.mjs`, until those move to https. The three above are
+written for the https devnet now. After the shared devnet is reset onto https, there is no http
+stack.
 
 The spaces, multi-PDS and relay overlays are on devnet's `spaces-lexicon-authority` branch until it
 merges.
@@ -110,17 +179,17 @@ page screenshots go to `PROBE_OUT`, which defaults to the script's directory. Sa
 want to compare runs:
 
 ```sh
-node sandbox/opensocial/probe-private-rsvp.mjs > private-rsvp.log 2>&1
+node sandbox/opensocial/probe-events-space.mjs > events-space.log 2>&1
 ```
 
-| Script | Question | Needs step 3 |
-| --- | --- | --- |
-| `probe-typed-scope.mjs` | What does a `space:` scope that names a space type do, once its lexicon resolves? | yes |
-| `probe-cross-pds.mjs` | Can members on other PDS builds join a group hosted on the spaces PDS? | yes |
-| `probe-events-space.mjs` | Can a group keep members-only events in a space? Does a bare typed scope widen when its declaration changes? | no |
-| `probe-linked-session.mjs` | Can a group's OAuth session with `space:*` scopes build that events space, under a type nobody published? | no |
-| `probe-private-rsvp.mjs` | Can a member's RSVP to a members-only event stay private, and who can read it? | no |
-| `probe-space-blob.mjs` | Can a members-only event carry an image that only the group can read back? | no |
+| Script | Question | Runs on | Needs the proposal's lexicons |
+| --- | --- | --- | --- |
+| `probe-typed-scope.mjs` | What does a `space:` scope that names a space type do, once its lexicon resolves? | http | yes |
+| `probe-cross-pds.mjs` | Can members on other PDS builds join a group hosted on the spaces PDS? | https | yes |
+| `probe-events-space.mjs` | Can a group keep members-only events in a space? Does a bare typed scope widen when its declaration changes? | http | no |
+| `probe-linked-session.mjs` | Can a group's OAuth session with `space:*` scopes build that events space, under a type nobody published? | https | no |
+| `probe-private-rsvp.mjs` | Can a member's RSVP to a members-only event stay private, and who can read it? | https | no |
+| `probe-space-blob.mjs` | Can a members-only event carry an image that only the group can read back? | http | no |
 
 The results below were seen on the spaces image at revision `79d6307e`. A different image may
 differ, and that is worth knowing.
@@ -138,9 +207,7 @@ GROUP_HANDLE=sandbox-group.devnet.test node sandbox/opensocial/probe-typed-scope
 
 ### Members on other PDS builds
 
-```sh
-node sandbox/opensocial/probe-cross-pds.mjs
-```
+On the https devnet; see above for the command.
 
 - Members on the regular release and the production build sign in, but the `space:` scope is
   dropped from the grant without telling them. They can be listed by the group, and they cannot write
@@ -167,9 +234,7 @@ proposal. A run takes about 7 minutes, because it waits for the PDS's lexicon ca
 
 ### A group's OAuth session builds the events space
 
-```sh
-node sandbox/opensocial/probe-linked-session.mjs
-```
+On the https devnet; see above for the command.
 
 The group signs in through OAuth and asks for the scopes atmo's groups work uses:
 `space:*?authority=self&manage=create&manage=update&manage=delete` and
@@ -181,9 +246,7 @@ The group signs in through OAuth and asks for the scopes atmo's groups work uses
 
 ### Private RSVPs
 
-```sh
-node sandbox/opensocial/probe-private-rsvp.mjs
-```
+On the https devnet; see above for the command.
 
 The group puts one members-only event in its events space and lists alice, bob and carol as members
 of that space. erin and frank are not listed. Each member signs in with a grant for one collection,
