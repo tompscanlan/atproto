@@ -2,8 +2,9 @@
 // groups branch asks for, provision a members-only events space whose type nobody has published,
 // and place events in it? The events-space probe did the same writes with a password session.
 //
-// Run against atproto-devnet's spaces overlay only. Every account is a devnet account on localhost;
-// nothing reaches a public PDS, PLC or relay.
+// Run against atproto-devnet's https devnet, under its scripts/https-run. Every URL comes from the
+// devnet's data/devnet.env, and every account is a devnet account on this machine; nothing reaches a
+// public PDS, PLC or relay.
 //
 //   P0  precondition: the events type does not resolve from the lexicon authority
 //   S   the group links: sign-in and consent with atmo's group-session scopes
@@ -42,9 +43,9 @@ const env = (k, fallback) => {
   if (v === undefined) throw new Error(`${k} is required`)
   return v
 }
-const HOST = env('PDS_URL', 'http://localhost:3010')
-const PLC = env('PLC_URL', 'http://localhost:2582')
-const JETSTREAM = env('JETSTREAM_URL', 'ws://localhost:6008')
+const HOST = env('ALPHA_PDS_URL')
+const PLC = env('PLC_URL')
+const JETSTREAM = env('JETSTREAM_URL')
 const INVITE_CODE = process.env.INVITE_CODE
 const LEX_DID = env('LEX_AUTHORITY_DID')
 const GROUP_HANDLE = env('GROUP_HANDLE', 'linked-group.devnet.test')

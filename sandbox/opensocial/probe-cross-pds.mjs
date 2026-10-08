@@ -1,9 +1,10 @@
 // probe-cross-pds.mjs: can members on other PDS builds join a group hosted on the spaces
 // alpha, the way atmo joins them?
 //
-// Run against atproto-devnet with docker-compose.spaces.yml and docker-compose.multi-pds.yml,
-// after seed-lexicons.mjs. The group and alice live on the alpha (:3010), carol on a current
-// release (:3020), dave on the production build (:3030). For each member:
+// Run against atproto-devnet's https devnet, under its scripts/https-run, after the proposal's
+// lexicons are published there. Every URL comes from the devnet's data/devnet.env. The group and
+// alice live on the alpha (ALPHA_PDS_URL), carol on a current release (REGULAR_PDS_URL), dave on
+// the production build (PROD_PDS_URL). For each member:
 //
 //   A  the group lists them on its members space (putMember, on the alpha)
 //   B  they write their acceptance into the group's space through their own PDS
@@ -34,8 +35,15 @@ const {
   WellKnownHandleResolver,
 } = await import(`${ATCUTE}/identity-resolver/dist/index.js`)
 
-const ALPHA = process.env.ALPHA_PDS_URL ?? 'http://localhost:3010'
-const PLC = process.env.PLC_URL ?? 'http://localhost:2582'
+const env = (k, fallback) => {
+  const v = process.env[k] ?? fallback
+  if (v === undefined) throw new Error(`${k} is required`)
+  return v
+}
+const ALPHA = env('ALPHA_PDS_URL')
+const REGULAR = env('REGULAR_PDS_URL')
+const PROD = env('PROD_PDS_URL')
+const PLC = env('PLC_URL')
 const INVITE_CODE = process.env.INVITE_CODE
 const OUT =
   process.env.PROBE_OUT ?? path.dirname(new URL(import.meta.url).pathname)
@@ -252,18 +260,10 @@ const group = await account(
 )
 const members = [
   await account(ALPHA, 'alice.devnet.test', 'alice-devnet-pass'),
-  await account(
-    process.env.REGULAR_PDS_URL ?? 'http://localhost:3020',
-    'carol.regular.devnet.test',
-    'carol-pass',
-    { create: true },
-  ),
-  await account(
-    process.env.PROD_PDS_URL ?? 'http://localhost:3030',
-    'dave.prod.devnet.test',
-    'dave-pass',
-    { create: true },
-  ),
+  await account(REGULAR, 'carol.regular.devnet.test', 'carol-pass', {
+    create: true,
+  }),
+  await account(PROD, 'dave.prod.devnet.test', 'dave-pass', { create: true }),
 ]
 const GROUP = group.did
 const MEMBERS = `at://${GROUP}/space/${MEMBERS_TYPE}/self`
