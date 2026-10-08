@@ -2,8 +2,9 @@
 // group's events space as a standard community.lexicon.calendar.rsvp. Who can write one, who can
 // read one, and does anything reach Jetstream?
 //
-// Run against atproto-devnet with the spaces and multi-PDS overlays. Every account is a devnet
-// account on localhost; nothing reaches a public PDS, PLC or relay.
+// Run against atproto-devnet's https devnet, under its scripts/https-run. Every URL comes from the
+// devnet's data/devnet.env, and every account is a devnet account on this machine; nothing reaches a
+// public PDS, PLC or relay.
 //
 //   S   the group provisions its members and events spaces and writes a members-only event; the
 //       events space lists alice, bob and carol (read and write), and not erin or frank
@@ -47,10 +48,10 @@ const env = (k, fallback) => {
   if (v === undefined) throw new Error(`${k} is required`)
   return v
 }
-const ALPHA = env('PDS_URL', 'http://localhost:3010')
-const REGULAR = env('REGULAR_PDS_URL', 'http://localhost:3020')
-const PLC = env('PLC_URL', 'http://localhost:2582')
-const JETSTREAM = env('JETSTREAM_URL', 'ws://localhost:6008')
+const ALPHA = env('ALPHA_PDS_URL')
+const REGULAR = env('REGULAR_PDS_URL')
+const PLC = env('PLC_URL')
+const JETSTREAM = env('JETSTREAM_URL')
 const INVITE_CODE = process.env.INVITE_CODE
 const EVENTS_TYPE = env('EVENTS_TYPE', 'net.openmeet.space.events')
 const OUT =
