@@ -23,6 +23,8 @@ import { createRequire } from 'node:module'
 import http from 'node:http'
 import path from 'node:path'
 
+import { launchBrowser } from './devnet-browser.mjs'
+
 const require = createRequire(import.meta.url)
 const {
   chromium,
@@ -279,16 +281,13 @@ const actorResolver = new LocalActorResolver({
     methods: { plc: new PlcDidDocumentResolver({ apiUrl: PLC }) },
   }),
 })
-const browser = await chromium.launch()
+const browser = await launchBrowser(chromium)
 async function oauthFlow(id, who) {
   const client = new OAuthClient({
     metadata: { redirect_uris: [REDIRECT], scope: MEMBER_SCOPE },
     actorResolver,
     stores: { sessions: new MemoryStore(), states: new MemoryStore({ ttl: 600_000 }) },
   })
-  // OAuthClient does not pass allowHttp through, and the devnet PDSes are plain http.
-  client.resolver.protectedResourceResolver.allowHttp = true
-  client.resolver.authorizationServerResolver.allowHttp = true
   const auth = await client.authorize({
     target: { type: 'account', identifier: who.did },
     scope: MEMBER_SCOPE.join(' '),
