@@ -301,7 +301,7 @@ const lexiconTs = (
             genServerXrpcStreaming(file, lexicons, lexUri)
           } else if (def.type === 'record') {
             genRecord(file, imports, lexicons, lexUri)
-          } else if (def.type === 'permission-set') {
+          } else if (def.type === 'permission-set' || def.type === 'space') {
             continue
           } else {
             genUserType(file, imports, lexicons, lexUri)
